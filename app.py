@@ -9,6 +9,7 @@ import cv2
 import time
 import pandas as pd
 import numpy as np
+import random
 
 # ========================
 #  PAGE CONFIGURATION
@@ -33,13 +34,18 @@ CHAT_IDS = [
     "SECURITY_TEAM_3"   # Placeholder for security supervisor
 ]
 
-# Hardcoded South-South Nigeria coordinates with map links
-LOCATION_COORDS = "Latitude: 4.8156, Longitude: 7.0498 (Port Harcourt, Nigeria)"
-GOOGLE_MAPS_LINK = "https://www.google.com/maps?q=4.8156,7.0498"
-OPENSTREETMAP_LINK = "https://www.openstreetmap.org/?mlat=4.8156&mlon=7.0498&zoom=16"
-
 # YOLO model filename
 MODEL_PATH = "yolov8_trained.pt"
+
+# South-South Nigeria States Bounding Boxes
+SOUTH_SOUTH_STATES = {
+    "Rivers": {"lat_range": (4.4, 5.5), "lon_range": (6.8, 7.4)},
+    "Akwa Ibom": {"lat_range": (4.5, 5.3), "lon_range": (7.5, 8.5)},
+    "Cross River": {"lat_range": (4.7, 6.0), "lon_range": (8.0, 9.0)},
+    "Bayelsa": {"lat_range": (4.5, 5.0), "lon_range": (6.0, 6.5)},
+    "Edo": {"lat_range": (5.5, 7.0), "lon_range": (5.5, 6.5)},
+    "Delta": {"lat_range": (5.0, 6.0), "lon_range": (5.5, 6.5)}
+}
 
 # Initialize session state for logging
 if "log_df" not in st.session_state:
@@ -48,6 +54,22 @@ if "log_df" not in st.session_state:
 # ========================
 #  FUNCTIONS
 # ========================
+def generate_random_coordinates():
+    """Generate random coordinates within South-South Nigeria states"""
+    state_name = random.choice(list(SOUTH_SOUTH_STATES.keys()))
+    state_data = SOUTH_SOUTH_STATES[state_name]
+    
+    latitude = round(random.uniform(state_data["lat_range"][0], state_data["lat_range"][1]), 4)
+    longitude = round(random.uniform(state_data["lon_range"][0], state_data["lon_range"][1]), 4)
+    
+    return state_name, latitude, longitude
+
+def get_map_links(latitude, longitude):
+    """Generate Google Maps and OpenStreetMap links"""
+    google_maps_link = f"https://www.google.com/maps?q={latitude},{longitude}"
+    openstreetmap_link = f"https://www.openstreetmap.org/?mlat={latitude}&mlon={longitude}&zoom=16"
+    return google_maps_link, openstreetmap_link
+
 def send_telegram_message(text, image_path=None):
     """Send professional alert messages to Telegram"""
     for chat_id in CHAT_IDS:
@@ -114,14 +136,14 @@ with st.sidebar:
     # Alert Configuration
     st.subheader("Alert Configuration")
     st.write("**Recipients Configured:** 3")
-    st.write("**Location:** Port Harcourt, Nigeria")
+    st.write("**Coverage Area:** South-South Nigeria")
     st.write("**Response Protocol:** Active")
     
     # Location Information
-    st.subheader("📍 Location Details")
-    st.write(f"**Coordinates:** 4.8156, 7.0498")
-    st.write(f"**Google Maps:** [View Location]({GOOGLE_MAPS_LINK})")
-    st.write(f"**OpenStreetMap:** [View Location]({OPENSTREETMAP_LINK})")
+    st.subheader("📍 Coverage Area")
+    st.write("**States Covered:**")
+    for state in SOUTH_SOUTH_STATES.keys():
+        st.write(f"• {state}")
     
     # Human-in-the-loop status
     st.subheader("Human Verification")
@@ -167,6 +189,11 @@ with col2:
 model = YOLO(MODEL_PATH)
 
 if uploaded_file:
+    # Generate random coordinates for this detection
+    state_name, latitude, longitude = generate_random_coordinates()
+    google_maps_link, openstreetmap_link = get_map_links(latitude, longitude)
+    location_coords = f"Latitude: {latitude}, Longitude: {longitude} ({state_name} State)"
+    
     # File processing section
     st.markdown("---")
     st.subheader("Analysis in Progress")
@@ -215,25 +242,25 @@ if uploaded_file:
                 st.error(f"{threat_icon} THREAT LEVEL: {threat_level} - WEAPON DETECTED")
                 
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                log_event("Weapon Detection", f"Confidence: {max_confidence:.1f}%", "HIGH")
+                log_event("Weapon Detection", f"Confidence: {max_confidence:.1f}% - Location: {state_name}", "HIGH")
 
                 # Save annotated output
                 output_img = f"detected_{timestamp}.jpg".replace(" ", "_").replace(":", "-")
                 cv2.imwrite(output_img, results[0].plot())
                 log_event("Evidence Saved", output_img, "INFO")
 
-                # Professional alert message with map links
+                # Professional alert message with dynamic map links
                 alert_text = f"""🚨 SECURITY ALERT - WEAPON DETECTED
 
-📍 Location: {LOCATION_COORDS}
+📍 Location: {location_coords}
 🕒 Time: {timestamp}
 🎯 Confidence: {max_confidence:.1f}%
 ⚠️ Threat Level: {threat_level}
 📊 Status: IMMEDIATE RESPONSE REQUIRED
 
 🗺️ NAVIGATION LINKS:
-Google Maps: {GOOGLE_MAPS_LINK}
-OpenStreetMap: {OPENSTREETMAP_LINK}
+Google Maps: {google_maps_link}
+OpenStreetMap: {openstreetmap_link}
 
 Action Required: Security team dispatched
 Safety Protocol: Area containment initiated
@@ -241,7 +268,7 @@ Safety Protocol: Area containment initiated
 Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 """
                 send_telegram_message(alert_text, image_path=output_img)
-                log_event("Alert Sent", f"Telegram - {len(CHAT_IDS)} recipients", "HIGH")
+                log_event("Alert Sent", f"Telegram - {len(CHAT_IDS)} recipients - Location: {state_name}", "HIGH")
 
                 # Human verification simulation
                 is_confirmed = simulate_human_verification(max_confidence)
@@ -249,7 +276,7 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 if is_confirmed:
                     # Professional audio alert
                     st.warning("🔊 SECURITY ALERT AUDIO - PLAY FOR WARNING")
-                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat confirmed. Weapon detected with {max_confidence:.1f} percent confidence. Immediate response required. Location coordinates: 4.8156, 7.0498.")
+                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat confirmed. Weapon detected with {max_confidence:.1f} percent confidence. Immediate response required. Location: {state_name} State. Coordinates: {latitude}, {longitude}.")
                     audio_path = "security_alert.mp3"
                     tts.save(audio_path)
                     st.audio(audio_path)
@@ -266,11 +293,12 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 with col2:
                     st.metric("Human Verify", "CONFIRMED" if is_confirmed else "PENDING", "")
                 with col3:
-                    st.metric("Response", "ACTIVATED", "Alerts Sent")
+                    st.metric("Location", state_name, "State")
                 with col4:
-                    st.write("**📍 Location Links:**")
-                    st.write(f"[Google Maps]({GOOGLE_MAPS_LINK})")
-                    st.write(f"[OpenStreetMap]({OPENSTREETMAP_LINK})")
+                    st.write("**📍 Navigation Links:**")
+                    st.write(f"[Google Maps]({google_maps_link})")
+                    st.write(f"[OpenStreetMap]({openstreetmap_link})")
+                    st.write(f"**Coordinates:** {latitude}, {longitude}")
 
             else:
                 st.success("✅ THREAT ASSESSMENT: CLEAR")
@@ -332,12 +360,12 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                     st.image(img_path, use_column_width=True)
 
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                log_event("Video Weapon Detection", f"Confidence: {max_confidence:.1f}%", "HIGH")
+                log_event("Video Weapon Detection", f"Confidence: {max_confidence:.1f}% - Location: {state_name}", "HIGH")
                 
-                # Professional video alert message with map links
+                # Professional video alert message with dynamic map links
                 alert_text = f"""🚨 SECURITY ALERT - WEAPON DETECTED IN VIDEO
 
-📍 Location: {LOCATION_COORDS}
+📍 Location: {location_coords}
 🕒 Time: {timestamp}
 🎯 Confidence: {max_confidence:.1f}%
 ⚠️ Threat Level: {threat_level}
@@ -345,8 +373,8 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 📊 Status: IMMEDIATE REVIEW REQUIRED
 
 🗺️ NAVIGATION LINKS:
-Google Maps: {GOOGLE_MAPS_LINK}
-OpenStreetMap: {OPENSTREETMAP_LINK}
+Google Maps: {google_maps_link}
+OpenStreetMap: {openstreetmap_link}
 
 Action Required: Review video footage
 Safety Protocol: Area monitoring intensified
@@ -354,14 +382,14 @@ Safety Protocol: Area monitoring intensified
 Incident ID: VID{timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 """
                 send_telegram_message(alert_text, image_path=img_path)
-                log_event("Video Alert Sent", f"Telegram - {len(CHAT_IDS)} recipients", "HIGH")
+                log_event("Video Alert Sent", f"Telegram - {len(CHAT_IDS)} recipients - Location: {state_name}", "HIGH")
 
                 # Human verification for video
                 is_confirmed = simulate_human_verification(max_confidence)
                 
                 if is_confirmed:
                     st.warning("🔊 VIDEO SURVEILLANCE ALERT - PLAY FOR WARNING")
-                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat in video surveillance. Weapon detected with {max_confidence:.1f} percent confidence. Immediate review required. Location coordinates: 4.8156, 7.0498.")
+                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat in video surveillance. Weapon detected with {max_confidence:.1f} percent confidence. Immediate review required. Location: {state_name} State. Coordinates: {latitude}, {longitude}.")
                     audio_path = "video_security_alert.mp3"
                     tts.save(audio_path)
                     st.audio(audio_path)
@@ -386,7 +414,7 @@ else:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: gray;'>"
-    "Weapon Detection & Alert System v1.0 | AI-Powered Security Platform | Event Logging Active"
+    "Weapon Detection & Alert System v1.0 | AI-Powered Security Platform | South-South Nigeria Coverage"
     "</div>", 
     unsafe_allow_html=True
 )
