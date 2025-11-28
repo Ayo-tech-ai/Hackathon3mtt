@@ -31,7 +31,7 @@ TELEGRAM_TOKEN = st.secrets["TELEGRAM_TOKEN"]
 # Multiple recipients for professional setup
 CHAT_IDS = [
     "5455011626",
-    "SECURITY_TEAM_2",
+    "5636140286",
     "SECURITY_TEAM_3"
 ]
 
