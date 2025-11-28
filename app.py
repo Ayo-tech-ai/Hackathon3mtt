@@ -162,6 +162,7 @@ def get_threat_level(confidence):
     else:
         return "LOW", "🟢"
 
+
 # ========================
 #  SIDEBAR - SYSTEM INFORMATION
 # ========================
@@ -203,6 +204,40 @@ with st.sidebar:
         for _, event in recent_events.iterrows():
             st.write(f"{event['Timestamp'][11:]} - {event['Event']}")
 
+    # ========================
+    # TEAM INFORMATION
+    # ========================
+    st.markdown("---")
+    st.subheader("🏆 Hackathon Information")
+    st.write("**Event:** 3MTT/Deeptech")
+    st.write("**Hackathon:** Build with AI Hackathon 2025")
+    st.write("**Track:** Health & Public Safety")
+    st.write("**Sector:** Public Safety & Security")
+    
+    st.subheader("👥 Team Members")
+    
+    # Team Member 1
+    with st.expander("Ayoola Mujib Ayodel", expanded=True):
+        st.write("**Learning Track:** Data Science and Machine Learning")
+        st.write("**Fellow ID:** FE/23/89361170")
+        st.write("**Role:** AI/ML Engineer & Team Lead")
+    
+    # Team Member 2 (Placeholder)
+    with st.expander("Team Member 2", expanded=False):
+        st.write("**Learning Track:** [Learning Track]")
+        st.write("**Fellow ID:** [Fellow ID]")
+        st.write("**Role:** [Role]")
+        st.write("**Email:** [email@example.com]")
+    
+    # Team Member 3 (Placeholder)
+    with st.expander("Team Member 3", expanded=False):
+        st.write("**Learning Track:** [Learning Track]")
+        st.write("**Fellow ID:** [Fellow ID]")
+        st.write("**Role:** [Role]")
+        st.write("**Email:** [email@example.com]")
+    
+    st.markdown("---")
+    st.caption("Built for 3MTT Build with AI Hackathon 2025")
 # ========================
 #  MAIN CONTENT AREA
 # ========================
