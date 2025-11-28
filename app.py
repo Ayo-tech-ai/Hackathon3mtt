@@ -33,8 +33,10 @@ CHAT_IDS = [
     "SECURITY_TEAM_3"   # Placeholder for security supervisor
 ]
 
-# Hardcoded South-South Nigeria coordinates
+# Hardcoded South-South Nigeria coordinates with map links
 LOCATION_COORDS = "Latitude: 4.8156, Longitude: 7.0498 (Port Harcourt, Nigeria)"
+GOOGLE_MAPS_LINK = "https://www.google.com/maps?q=4.8156,7.0498"
+OPENSTREETMAP_LINK = "https://www.openstreetmap.org/?mlat=4.8156&mlon=7.0498&zoom=16"
 
 # YOLO model filename
 MODEL_PATH = "yolov8_trained.pt"
@@ -114,6 +116,12 @@ with st.sidebar:
     st.write("**Recipients Configured:** 3")
     st.write("**Location:** Port Harcourt, Nigeria")
     st.write("**Response Protocol:** Active")
+    
+    # Location Information
+    st.subheader("📍 Location Details")
+    st.write(f"**Coordinates:** 4.8156, 7.0498")
+    st.write(f"**Google Maps:** [View Location]({GOOGLE_MAPS_LINK})")
+    st.write(f"**OpenStreetMap:** [View Location]({OPENSTREETMAP_LINK})")
     
     # Human-in-the-loop status
     st.subheader("Human Verification")
@@ -214,7 +222,7 @@ if uploaded_file:
                 cv2.imwrite(output_img, results[0].plot())
                 log_event("Evidence Saved", output_img, "INFO")
 
-                # Professional alert message with threat level
+                # Professional alert message with map links
                 alert_text = f"""🚨 SECURITY ALERT - WEAPON DETECTED
 
 📍 Location: {LOCATION_COORDS}
@@ -222,6 +230,10 @@ if uploaded_file:
 🎯 Confidence: {max_confidence:.1f}%
 ⚠️ Threat Level: {threat_level}
 📊 Status: IMMEDIATE RESPONSE REQUIRED
+
+🗺️ NAVIGATION LINKS:
+Google Maps: {GOOGLE_MAPS_LINK}
+OpenStreetMap: {OPENSTREETMAP_LINK}
 
 Action Required: Security team dispatched
 Safety Protocol: Area containment initiated
@@ -237,7 +249,7 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 if is_confirmed:
                     # Professional audio alert
                     st.warning("🔊 SECURITY ALERT AUDIO - PLAY FOR WARNING")
-                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat confirmed. Weapon detected with {max_confidence:.1f} percent confidence. Immediate response required.")
+                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat confirmed. Weapon detected with {max_confidence:.1f} percent confidence. Immediate response required. Location coordinates: 4.8156, 7.0498.")
                     audio_path = "security_alert.mp3"
                     tts.save(audio_path)
                     st.audio(audio_path)
@@ -248,13 +260,17 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 # Incident report
                 st.markdown("---")
                 st.subheader("📋 Incident Report")
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns(4)
                 with col1:
                     st.metric("Threat Level", threat_level, f"Confidence: {max_confidence:.1f}%")
                 with col2:
                     st.metric("Human Verify", "CONFIRMED" if is_confirmed else "PENDING", "")
                 with col3:
                     st.metric("Response", "ACTIVATED", "Alerts Sent")
+                with col4:
+                    st.write("**📍 Location Links:**")
+                    st.write(f"[Google Maps]({GOOGLE_MAPS_LINK})")
+                    st.write(f"[OpenStreetMap]({OPENSTREETMAP_LINK})")
 
             else:
                 st.success("✅ THREAT ASSESSMENT: CLEAR")
@@ -318,7 +334,7 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 log_event("Video Weapon Detection", f"Confidence: {max_confidence:.1f}%", "HIGH")
                 
-                # Professional video alert message
+                # Professional video alert message with map links
                 alert_text = f"""🚨 SECURITY ALERT - WEAPON DETECTED IN VIDEO
 
 📍 Location: {LOCATION_COORDS}
@@ -327,6 +343,10 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 ⚠️ Threat Level: {threat_level}
 📹 Source: Video Surveillance
 📊 Status: IMMEDIATE REVIEW REQUIRED
+
+🗺️ NAVIGATION LINKS:
+Google Maps: {GOOGLE_MAPS_LINK}
+OpenStreetMap: {OPENSTREETMAP_LINK}
 
 Action Required: Review video footage
 Safety Protocol: Area monitoring intensified
@@ -341,7 +361,7 @@ Incident ID: VID{timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 
                 if is_confirmed:
                     st.warning("🔊 VIDEO SURVEILLANCE ALERT - PLAY FOR WARNING")
-                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat in video surveillance. Weapon detected with {max_confidence:.1f} percent confidence. Immediate review required.")
+                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat in video surveillance. Weapon detected with {max_confidence:.1f} percent confidence. Immediate review required. Location coordinates: 4.8156, 7.0498.")
                     audio_path = "video_security_alert.mp3"
                     tts.save(audio_path)
                     st.audio(audio_path)
