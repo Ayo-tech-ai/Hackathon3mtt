@@ -16,7 +16,7 @@ import json
 #  PAGE CONFIGURATION
 # ========================
 st.set_page_config(
-    page_title="Weapon Detection & Alert System",
+    page_title="VisionGuard AI",
     page_icon="🛡️",
     layout="wide"
 )
