@@ -245,7 +245,7 @@ with st.sidebar:
 # Centralized Title Section
 st.markdown("""
 <div style='text-align: center; padding: 20px 0;'>
-    <h1 style='margin-bottom: 10px;'>Weapon Detection & Alert System</h1>
+    <h1 style='margin-bottom: 10px;'>VisionGuard AI</h1>
     <h3 style='color: #666; margin-top: 0;'>AI-Powered Security Monitoring Platform</h3>
 </div>
 """, unsafe_allow_html=True)
@@ -521,7 +521,7 @@ else:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: gray;'>"
-    "Weapon Detection & Alert System v1.0 | AI-Powered Security Platform | Interactive Telegram Alerts"
+    "Vision Guard AI v1.0 | AI-Powered Security Platform | Interactive Telegram Alerts"
     "</div>", 
     unsafe_allow_html=True
 )
