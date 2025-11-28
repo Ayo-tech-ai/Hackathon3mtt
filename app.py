@@ -8,6 +8,7 @@ from datetime import datetime
 import cv2
 import time
 import pandas as pd
+import numpy as np
 
 # ========================
 #  PAGE CONFIGURATION
