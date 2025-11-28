@@ -1,8 +1,8 @@
-# Weapon Detection & Alert System
+# Visionguard AI by Nation Gate 
 
 ## 🛡️ Overview
 
-The **Weapon Detection & Alert System** is an AI-powered security monitoring platform designed to automatically detect firearms in real-time and trigger immediate emergency response protocols. This Minimum Viable Product (MVP) demonstrates the core functionality of a comprehensive security system that can be deployed in schools, public buildings, shopping malls, and other sensitive locations.
+The **Visionguard AI** is an AI-powered security monitoring platform designed to automatically detect firearms in real-time and trigger immediate emergency response protocols. This Minimum Viable Product (MVP) demonstrates the core functionality of a comprehensive security system that can be deployed in schools, public buildings, shopping malls, and other sensitive locations.
 
 > **⚠️ Important Note**: This is a **demonstration prototype** showcasing the concept and workflow. A production-ready system would integrate with physical security infrastructure including CCTV networks, public address systems, and access control systems.
 
