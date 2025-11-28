@@ -230,10 +230,10 @@ with st.sidebar:
         #st.write("**Email:** [email@example.com]")
     
     # Team Member 3 (Placeholder)
-    #with st.expander("Team Member 3", expanded=False):
-        #st.write("**Learning Track:** [Learning Track]")
-        #st.write("**Fellow ID:** [Fellow ID]")
-        #st.write("**Role:** [Role]")
+    with st.expander("Samuel Ekong", expanded=False):
+        st.write("**Learning Track:** Geospatial Data Science")
+        st.write("**Fellow ID:** FE/2388939683")
+        st.write("**Role:** Geospatial Data Scientist")
         #st.write("**Email:** [email@example.com]")
     
     st.markdown("---")
