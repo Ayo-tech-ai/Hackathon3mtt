@@ -160,17 +160,103 @@ Users are responsible for ensuring compliance with local regulations regarding:
 
 We welcome contributions from security professionals, AI researchers, and developers interested in enhancing public safety technology. Please see our contribution guidelines for more information.
 
-## 📄 License
+## 🔗 Live Demo & Repository
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### **🌐 Live Application**
+**Experience the system in action:**
+👉 [https://deeptechhack.streamlit.app/](https://deeptechhack.streamlit.app/)
 
-## 🆘 Support
-
-For technical support or security concerns:
-- Create an issue in this repository
-- Contact our security team at security@example.com
-- Refer to documentation in `/docs` folder
+### **📂 Source Code**
+**Explore the complete codebase:**
+👉 [https://github.com/Ayo-tech-ai/Hackathon3mtt](https://github.com/Ayo-tech-ai/Hackathon3mtt)
 
 ---
 
-**Built with ❤️ for Safer Communities** | *This is a demonstration system for educational purposes*
+## 🔒 Security & Access Control
+
+### **Important Security Notice**
+
+#### 🛡️ **Why You Can't Receive Alerts in This Demo**
+
+**The Telegram alert system is intentionally restricted for security reasons:**
+
+1. **Pre-Approved Contacts Only**
+   - Only pre-registered security personnel chat IDs can receive alerts
+   - This prevents unauthorized access to sensitive security information
+
+2. **Controlled Access**
+   - Chat IDs are hardcoded in the configuration for security
+   - New contacts must be manually added by system administrators
+
+3. **Security Best Practices**
+   - Prevents spam and misuse of the alert system
+   - Ensures only authorized personnel receive sensitive security data
+   - Maintains operational security protocols
+
+#### 🔐 **How It Works in Production**
+
+In a real deployment, security teams would:
+
+1. **Register authorized personnel** through an admin interface
+2. **Verify identities** before granting alert access
+3. **Maintain an approved contact list** with role-based permissions
+4. **Audit all alert recipients** regularly
+
+#### 🎯 **What You CAN Experience in the Demo**
+
+While you won't receive actual Telegram alerts, you can still:
+
+- ✅ **See the complete alert workflow**
+- ✅ **View simulated Telegram message formats**
+- ✅ **Experience the public evacuation announcements**
+- ✅ **Understand the multi-channel alert system**
+- ✅ **Observe the security verification process**
+
+#### 🔧 **For Developers & Testers**
+
+If you want to test the Telegram integration:
+
+1. **Create your own Telegram bot** via [@BotFather](https://t.me/BotFather)
+2. **Clone the repository** and set up locally
+3. **Add your chat ID** to the configuration
+4. **Use your own Telegram token** in the secrets
+
+---
+
+## 🚀 Quick Start for Testing
+
+### **1. Experience the Live Demo**
+Visit [the live app](https://deeptechhack.streamlit.app/) to see:
+- AI weapon detection in action
+- Complete alert workflow simulation
+- Professional security interface
+- Realistic evacuation protocols
+
+### **2. Explore the Code**
+Browse [the GitHub repository](https://github.com/Ayo-tech-ai/Hackathon3mtt) to:
+- Review the AI implementation
+- Understand the alert system architecture
+- See how security protocols are implemented
+- Learn about the technology stack
+
+### **3. Understand the Security Model**
+- **Demo**: Restricted alert system for security
+- **Production**: Configurable contact management
+- **Enterprise**: Full role-based access control
+
+---
+
+## 📞 Support & Contact
+
+**For technical questions about this implementation:**
+- 📧 **Team Lead**: Ayoola Mujib Ayodel
+- 🏆 **Hackathon**: 3MTT Build with AI 2025
+- 🛡️ **Track**: Health & Public Safety
+
+**For security-related inquiries about the implementation approach:**
+- Please create an issue in the GitHub repository
+- Or contact the development team through hackathon channels
+
+---
+
+*Note: This is a demonstration system for educational purposes. The restricted alert access is a security feature, not a limitation of the technology.*
