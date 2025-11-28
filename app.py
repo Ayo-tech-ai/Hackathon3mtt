@@ -161,8 +161,13 @@ with st.sidebar:
 #  MAIN CONTENT AREA
 # ========================
 
-st.title("Weapon Detection & Alert System")
-st.markdown("### AI-Powered Security Monitoring Platform")
+# Centralized Title Section
+st.markdown("""
+<div style='text-align: center; padding: 20px 0;'>
+    <h1 style='margin-bottom: 10px;'>Weapon Detection & Alert System</h1>
+    <h3 style='color: #666; margin-top: 0;'>AI-Powered Security Monitoring Platform</h3>
+</div>
+""", unsafe_allow_html=True)
 
 # Professional file upload section
 st.markdown("---")
