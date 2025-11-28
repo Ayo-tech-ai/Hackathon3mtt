@@ -226,7 +226,7 @@ with st.sidebar:
     with st.expander("Edidiong Ime Moses", expanded=False):
         st.write("**Learning Track:** Data Science and Machine Learning")
         st.write("**Fellow ID:** FE/23/96831838")
-        #st.write("**Role:** [Role]")
+        st.write("**Role:** Machine Learning Engineer")
         #st.write("**Email:** [email@example.com]")
     
     # Team Member 3 (Placeholder)
