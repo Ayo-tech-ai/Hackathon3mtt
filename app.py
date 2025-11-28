@@ -10,6 +10,7 @@ import time
 import pandas as pd
 import numpy as np
 import random
+import json
 
 # ========================
 #  PAGE CONFIGURATION
@@ -30,8 +31,8 @@ TELEGRAM_TOKEN = st.secrets["TELEGRAM_TOKEN"]
 # Multiple recipients for professional setup
 CHAT_IDS = [
     "5455011626",
-    "SECURITY_TEAM_2",  # Placeholder for additional security personnel
-    "SECURITY_TEAM_3"   # Placeholder for security supervisor
+    "SECURITY_TEAM_2",
+    "SECURITY_TEAM_3"
 ]
 
 # YOLO model filename
@@ -70,8 +71,52 @@ def get_map_links(latitude, longitude):
     openstreetmap_link = f"https://www.openstreetmap.org/?mlat={latitude}&mlon={longitude}&zoom=16"
     return google_maps_link, openstreetmap_link
 
+def send_telegram_message_with_confirmation(text, image_path=None, incident_id=""):
+    """Send professional alert messages to Telegram with confirmation buttons"""
+    for i, chat_id in enumerate(CHAT_IDS):
+        if i == 0:  # First chat ID gets interactive buttons
+            # Send message with inline keyboard for confirmation
+            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+            
+            # Create inline keyboard with Yes/No buttons
+            keyboard = {
+                "inline_keyboard": [[
+                    {"text": "✅ CONFIRM WEAPON", "callback_data": f"confirm_{incident_id}"},
+                    {"text": "❌ FALSE ALARM", "callback_data": f"deny_{incident_id}"}
+                ]]
+            }
+            
+            payload = {
+                "chat_id": chat_id,
+                "text": text,
+                "reply_markup": json.dumps(keyboard)
+            }
+            
+            response = requests.post(url, data=payload)
+            
+            # Send image separately if available
+            if image_path and response.status_code == 200:
+                url_photo = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
+                with open(image_path, "rb") as img:
+                    photo_payload = {
+                        "chat_id": chat_id,
+                        "caption": "📸 Detection Evidence - Please confirm above"
+                    }
+                    requests.post(url_photo, data=photo_payload, files={"photo": img})
+                    
+        else:
+            # Other recipients get regular message without buttons
+            url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+            payload = {"chat_id": chat_id, "text": text}
+            requests.post(url, data=payload)
+
+            if image_path:
+                url_photo = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
+                with open(image_path, "rb") as img:
+                    requests.post(url_photo, data={"chat_id": chat_id}, files={"photo": img})
+
 def send_telegram_message(text, image_path=None):
-    """Send professional alert messages to Telegram"""
+    """Regular Telegram message without buttons (for non-alert messages)"""
     for chat_id in CHAT_IDS:
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
         payload = {"chat_id": chat_id, "text": text}
@@ -139,16 +184,17 @@ with st.sidebar:
     st.write("**Coverage Area:** South-South Nigeria")
     st.write("**Response Protocol:** Active")
     
+    # Telegram Features
+    st.subheader("Telegram Features")
+    st.write("**Interactive Alerts:** ✅ Enabled")
+    st.write("**Primary Contact:** Interactive buttons")
+    st.write("**Secondary Contacts:** Read-only alerts")
+    
     # Location Information
     st.subheader("📍 Coverage Area")
     st.write("**States Covered:**")
     for state in SOUTH_SOUTH_STATES.keys():
         st.write(f"• {state}")
-    
-    # Human-in-the-loop status
-    st.subheader("Human Verification")
-    st.write("**Status:** Active")
-    st.write("**Avg Response Time:** <10s")
     
     # Event Log Preview
     st.subheader("Recent Events")
@@ -247,6 +293,7 @@ if uploaded_file:
                 st.error(f"{threat_icon} THREAT LEVEL: {threat_level} - WEAPON DETECTED")
                 
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                incident_id = timestamp.replace(' ', '').replace(':', '').replace('-', '')
                 log_event("Weapon Detection", f"Confidence: {max_confidence:.1f}% - Location: {state_name}", "HIGH")
 
                 # Save annotated output
@@ -261,20 +308,20 @@ if uploaded_file:
 🕒 Time: {timestamp}
 🎯 Confidence: {max_confidence:.1f}%
 ⚠️ Threat Level: {threat_level}
-📊 Status: IMMEDIATE RESPONSE REQUIRED
+📊 Status: AWAITING CONFIRMATION
 
 🗺️ NAVIGATION LINKS:
 Google Maps: {google_maps_link}
 OpenStreetMap: {openstreetmap_link}
 
-Action Required: Security team dispatched
-Safety Protocol: Area containment initiated
-Public Alert: Evacuation announcement activated
+Action Required: Please confirm weapon presence
+Safety Protocol: Standby for confirmation
 
-Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
+Incident ID: {incident_id}
 """
-                send_telegram_message(alert_text, image_path=output_img)
-                log_event("Alert Sent", f"Telegram - {len(CHAT_IDS)} recipients - Location: {state_name}", "HIGH")
+                # Send interactive alert to primary contact, regular alerts to others
+                send_telegram_message_with_confirmation(alert_text, image_path=output_img, incident_id=incident_id)
+                log_event("Interactive Alert Sent", f"Primary: Interactive - Others: Read-only - Incident: {incident_id}", "HIGH")
 
                 # Human verification simulation
                 is_confirmed = simulate_human_verification(max_confidence)
@@ -282,13 +329,21 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 if is_confirmed:
                     # Public safety evacuation announcement
                     st.warning("🔊 PUBLIC SAFETY ANNOUNCEMENT - EVACUATION ALERT")
-                    tts = gTTS("Emergency! Emergency! Weapon detected around building. Immediate evacuation required. All occupants move calmly to nearest exits. Follow directions of staff and security personnel. Emergency!!!", lang='en', slow=False)
+                    tts = gTTS("Emergency! Emergency! Weapon detected around building. Immediate evacuation required. All occupants move calmly to nearest exits. Follow directions of staff and security personnel.", lang='en', slow=False)
                     audio_path = "evacuation_alert.mp3"
                     tts.save(audio_path)
                     st.audio(audio_path)
-                    log_event("Evacuation Alert", "Public safety announcement activated", "HIGH") 
+                    log_event("Evacuation Alert", "Public safety announcement activated", "HIGH")
+                    
+                    # Send confirmation update
+                    confirmation_text = f"✅ WEAPON CONFIRMED - Incident {incident_id}\nEvacuation procedures ACTIVATED"
+                    send_telegram_message(confirmation_text)
+                    
                 else:
                     st.info("🟡 Alert escalation paused pending further review")
+                    # Send update about inconclusive verification
+                    update_text = f"🟡 VERIFICATION INCONCLUSIVE - Incident {incident_id}\nManual review required"
+                    send_telegram_message(update_text)
 
                 # Incident report
                 st.markdown("---")
@@ -305,6 +360,8 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                     st.write(f"[Google Maps]({google_maps_link})")
                     st.write(f"[OpenStreetMap]({openstreetmap_link})")
                     st.write(f"**Coordinates:** {latitude}, {longitude}")
+                    
+                st.info("💡 **Primary security contact received interactive alert with confirmation buttons**")
 
             else:
                 st.success("✅ THREAT ASSESSMENT: CLEAR")
@@ -366,6 +423,7 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                     st.image(img_path, use_column_width=True)
 
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                incident_id = f"VID{timestamp.replace(' ', '').replace(':', '').replace('-', '')}"
                 log_event("Video Weapon Detection", f"Confidence: {max_confidence:.1f}% - Location: {state_name}", "HIGH")
                 
                 # Professional video alert message with dynamic map links
@@ -376,20 +434,19 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 🎯 Confidence: {max_confidence:.1f}%
 ⚠️ Threat Level: {threat_level}
 📹 Source: Video Surveillance
-📊 Status: IMMEDIATE REVIEW REQUIRED
+📊 Status: AWAITING CONFIRMATION
 
 🗺️ NAVIGATION LINKS:
 Google Maps: {google_maps_link}
 OpenStreetMap: {openstreetmap_link}
 
-Action Required: Review video footage
-Safety Protocol: Area monitoring intensified
-Public Alert: Evacuation announcement ready
+Action Required: Please confirm weapon presence in video
+Safety Protocol: Standby for confirmation
 
-Incident ID: VID{timestamp.replace(' ', '').replace(':', '').replace('-', '')}
+Incident ID: {incident_id}
 """
-                send_telegram_message(alert_text, image_path=img_path)
-                log_event("Video Alert Sent", f"Telegram - {len(CHAT_IDS)} recipients - Location: {state_name}", "HIGH")
+                send_telegram_message_with_confirmation(alert_text, image_path=img_path, incident_id=incident_id)
+                log_event("Video Interactive Alert", f"Primary: Interactive - Others: Read-only - Incident: {incident_id}", "HIGH")
 
                 # Human verification for video
                 is_confirmed = simulate_human_verification(max_confidence)
@@ -401,8 +458,16 @@ Incident ID: VID{timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                     tts.save(audio_path)
                     st.audio(audio_path)
                     log_event("Video Evacuation Alert", "Public safety announcement activated", "HIGH")
+                    
+                    # Send confirmation update
+                    confirmation_text = f"✅ VIDEO WEAPON CONFIRMED - Incident {incident_id}\nEvacuation procedures ACTIVATED"
+                    send_telegram_message(confirmation_text)
                 else:
                     st.info("🟡 Video alert escalation paused pending further review")
+                    update_text = f"🟡 VIDEO VERIFICATION INCONCLUSIVE - Incident {incident_id}\nManual review required"
+                    send_telegram_message(update_text)
+                    
+                st.info("💡 **Primary security contact received interactive alert with confirmation buttons**")
 
             else:
                 st.success("✅ VIDEO ANALYSIS COMPLETE: NO THREATS DETECTED")
@@ -421,7 +486,7 @@ else:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: gray;'>"
-    "Weapon Detection & Alert System v1.0 | AI-Powered Security Platform | South-South Nigeria Coverage"
+    "Weapon Detection & Alert System v1.0 | AI-Powered Security Platform | Interactive Telegram Alerts"
     "</div>", 
     unsafe_allow_html=True
 )
