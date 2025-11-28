@@ -282,11 +282,11 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 if is_confirmed:
                     # Public safety evacuation announcement
                     st.warning("🔊 PUBLIC SAFETY ANNOUNCEMENT - EVACUATION ALERT")
-                    tts = gTTS("Emergency! Emergency! Weapon detected around building. Immediate evacuation required. All occupants move calmly to nearest exits. Follow directions of staff and security personnel.", lang='en', slow=False)
+                    tts = gTTS("Emergency! Emergency! Weapon detected around building. Immediate evacuation required. All occupants move calmly to nearest exits. Follow directions of staff and security personnel. Emergency!!!", lang='en', slow=False)
                     audio_path = "evacuation_alert.mp3"
                     tts.save(audio_path)
                     st.audio(audio_path)
-                    log_event("Evacuation Alert", "Public safety announcement activated", "HIGH")
+                    log_event("Evacuation Alert", "Public safety announcement activated", "HIGH") 
                 else:
                     st.info("🟡 Alert escalation paused pending further review")
 
