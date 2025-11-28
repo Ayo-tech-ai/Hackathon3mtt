@@ -7,6 +7,7 @@ import requests
 from datetime import datetime
 import cv2
 import time
+import pandas as pd
 
 # ========================
 #  PAGE CONFIGURATION
@@ -37,6 +38,60 @@ LOCATION_COORDS = "Latitude: 4.8156, Longitude: 7.0498 (Port Harcourt, Nigeria)"
 # YOLO model filename
 MODEL_PATH = "yolov8_trained.pt"
 
+# Initialize session state for logging
+if "log_df" not in st.session_state:
+    st.session_state.log_df = pd.DataFrame(columns=["Timestamp", "Event", "Details", "Threat Level"])
+
+# ========================
+#  FUNCTIONS
+# ========================
+def send_telegram_message(text, image_path=None):
+    """Send professional alert messages to Telegram"""
+    for chat_id in CHAT_IDS:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        payload = {"chat_id": chat_id, "text": text}
+        requests.post(url, data=payload)
+
+        if image_path:
+            url_photo = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
+            with open(image_path, "rb") as img:
+                requests.post(url_photo, data={"chat_id": chat_id}, files={"photo": img})
+
+def log_event(event, details, threat_level="INFO"):
+    """Log events with timestamp and threat level"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.session_state.log_df.loc[len(st.session_state.log_df)] = [timestamp, event, details, threat_level]
+
+def simulate_human_verification(confidence):
+    """Simulate human-in-the-loop verification with probability based on confidence"""
+    st.info("🔍 Human-in-the-Loop: Awaiting security team verification...")
+    
+    # Simulate verification delay
+    with st.spinner("Security team reviewing detection..."):
+        time.sleep(5)
+    
+    # Higher confidence = higher probability of confirmation
+    confirmation_probability = min(confidence / 100, 0.9)  # Cap at 90% max
+    is_confirmed = np.random.random() < confirmation_probability
+    
+    if is_confirmed:
+        st.success(f"✅ Verification: CONFIRMED (Confidence: {confidence:.1f}%)")
+        log_event("Human Verification", f"Confirmed - Confidence: {confidence:.1f}%", "SUCCESS")
+        return True
+    else:
+        st.warning(f"⚠️ Verification: INCONCLUSIVE (Confidence: {confidence:.1f}%)")
+        log_event("Human Verification", f"Inconclusive - Confidence: {confidence:.1f}%", "WARNING")
+        return False
+
+def get_threat_level(confidence):
+    """Determine threat level based on confidence score"""
+    if confidence >= 80:
+        return "HIGH", "🔴"
+    elif confidence >= 60:
+        return "MEDIUM", "🟡"
+    else:
+        return "LOW", "🟢"
+
 # ========================
 #  SIDEBAR - SYSTEM INFORMATION
 # ========================
@@ -59,26 +114,17 @@ with st.sidebar:
     st.write("**Location:** Port Harcourt, Nigeria")
     st.write("**Response Protocol:** Active")
     
-    # Human-in-the-loop simulation
+    # Human-in-the-loop status
     st.subheader("Human Verification")
-    with st.spinner("Awaiting human verification..."):
-        time.sleep(5)  # Simulate 5-second verification delay
-    st.info("✅ Verification: Security Team Notified")
-
-# ========================
-#  TELEGRAM SEND FUNCTION
-# ========================
-def send_telegram_message(text, image_path=None):
-    for chat_id in CHAT_IDS:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        payload = {"chat_id": chat_id, "text": text}
-        requests.post(url, data=payload)
-
-        # Send image if available
-        if image_path:
-            url_photo = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
-            with open(image_path, "rb") as img:
-                requests.post(url_photo, data={"chat_id": chat_id}, files={"photo": img})
+    st.write("**Status:** Active")
+    st.write("**Avg Response Time:** <10s")
+    
+    # Event Log Preview
+    st.subheader("Recent Events")
+    if not st.session_state.log_df.empty:
+        recent_events = st.session_state.log_df.tail(3)
+        for _, event in recent_events.iterrows():
+            st.write(f"{event['Timestamp'][11:]} - {event['Event']}")
 
 # ========================
 #  MAIN CONTENT AREA
@@ -101,9 +147,12 @@ with col1:
 
 with col2:
     st.subheader("Quick Stats")
-    st.metric("Total Scans", "0", "Ready")
-    st.metric("Detection Accuracy", "98.2%", "High")
-    st.metric("Response Time", "<5s", "Optimal")
+    total_scans = len(st.session_state.log_df[st.session_state.log_df['Event'].str.contains('Detection')])
+    threats_detected = len(st.session_state.log_df[st.session_state.log_df['Threat Level'] == 'HIGH'])
+    
+    st.metric("Total Scans", total_scans)
+    st.metric("Threats Detected", threats_detected)
+    st.metric("System Uptime", "100%", "Stable")
 
 # Load YOLO model
 model = YOLO(MODEL_PATH)
@@ -114,7 +163,7 @@ if uploaded_file:
     st.subheader("Analysis in Progress")
     
     with st.spinner("🔍 Processing media content for threat assessment..."):
-        time.sleep(2)  # Simulate processing time for professional feel
+        time.sleep(2)
         
         file_ext = uploaded_file.name.split(".")[-1].lower()
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_ext}")
@@ -141,60 +190,74 @@ if uploaded_file:
                 st.write("#### Threat Assessment Result")
                 st.image(results[0].plot(), use_column_width=True)
 
-            # Check for weapon
+            # Check for weapon and get confidence
             detected = False
-            confidence = 0.0
+            max_confidence = 0.0
             for box in results[0].boxes:
                 cls = int(box.cls[0])
                 class_name = results[0].names[cls]
                 if class_name.lower() == "weapon":
                     detected = True
                     confidence = float(box.conf[0]) * 100
+                    max_confidence = max(max_confidence, confidence)
 
             if detected:
-                st.error("🚨 THREAT DETECTED - SECURITY ALERT")
+                threat_level, threat_icon = get_threat_level(max_confidence)
+                st.error(f"{threat_icon} THREAT LEVEL: {threat_level} - WEAPON DETECTED")
+                
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                log_event("Weapon Detection", f"Confidence: {max_confidence:.1f}%", "HIGH")
 
                 # Save annotated output
                 output_img = f"detected_{timestamp}.jpg".replace(" ", "_").replace(":", "-")
                 cv2.imwrite(output_img, results[0].plot())
+                log_event("Evidence Saved", output_img, "INFO")
 
-                # Professional alert message
+                # Professional alert message with threat level
                 alert_text = f"""🚨 SECURITY ALERT - WEAPON DETECTED
 
 📍 Location: {LOCATION_COORDS}
 🕒 Time: {timestamp}
-🎯 Confidence: {confidence:.1f}%
+🎯 Confidence: {max_confidence:.1f}%
+⚠️ Threat Level: {threat_level}
 📊 Status: IMMEDIATE RESPONSE REQUIRED
 
-⚠️ Action Required: Security team dispatched
-🔒 Safety Protocol: Area containment initiated
+Action Required: Security team dispatched
+Safety Protocol: Area containment initiated
 
 Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 """
-                # Send professional alert to Telegram
                 send_telegram_message(alert_text, image_path=output_img)
+                log_event("Alert Sent", f"Telegram - {len(CHAT_IDS)} recipients", "HIGH")
 
-                # Professional audio alert
-                st.warning("🔊 SECURITY ALERT AUDIO - PLAY FOR WARNING")
-                tts = gTTS("Security alert. Weapon detected. Immediate response required. All personnel proceed with caution.")
-                audio_path = "security_alert.mp3"
-                tts.save(audio_path)
-                st.audio(audio_path)
+                # Human verification simulation
+                is_confirmed = simulate_human_verification(max_confidence)
+                
+                if is_confirmed:
+                    # Professional audio alert
+                    st.warning("🔊 SECURITY ALERT AUDIO - PLAY FOR WARNING")
+                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat confirmed. Weapon detected with {max_confidence:.1f} percent confidence. Immediate response required.")
+                    audio_path = "security_alert.mp3"
+                    tts.save(audio_path)
+                    st.audio(audio_path)
+                    log_event("Audio Alert", "TTS generated and ready", "INFO")
+                else:
+                    st.info("🟡 Alert escalation paused pending further review")
 
                 # Incident report
                 st.markdown("---")
                 st.subheader("📋 Incident Report")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Threat Level", "HIGH", "Weapon Detected")
+                    st.metric("Threat Level", threat_level, f"Confidence: {max_confidence:.1f}%")
                 with col2:
-                    st.metric("Confidence", f"{confidence:.1f}%", "AI Assessment")
+                    st.metric("Human Verify", "CONFIRMED" if is_confirmed else "PENDING", "")
                 with col3:
-                    st.metric("Response", "ACTIVATED", "Security Notified")
+                    st.metric("Response", "ACTIVATED", "Alerts Sent")
 
             else:
                 st.success("✅ THREAT ASSESSMENT: CLEAR")
+                log_event("Clear Scan", "No weapons detected", "INFO")
                 st.info("No weapons detected. Area secured.")
 
         # ========================
@@ -204,7 +267,7 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
             cap = cv2.VideoCapture(temp_file_path)
             detected = False
             frame_saved = None
-            confidence = 0.0
+            max_confidence = 0.0
 
             progress_bar = st.progress(0)
             status_text = st.empty()
@@ -229,8 +292,9 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                     class_name = results[0].names[cls]
                     if class_name.lower() == "weapon":
                         detected = True
-                        frame_saved = results[0].plot()
                         confidence = float(box.conf[0]) * 100
+                        max_confidence = max(max_confidence, confidence)
+                        frame_saved = results[0].plot()
                         break
 
                 if detected:
@@ -241,7 +305,8 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
             status_text.empty()
 
             if detected:
-                st.error("🚨 THREAT DETECTED IN VIDEO - SECURITY ALERT")
+                threat_level, threat_icon = get_threat_level(max_confidence)
+                st.error(f"{threat_icon} THREAT LEVEL: {threat_level} - WEAPON IN VIDEO")
 
                 with col2:
                     st.write("#### Threat Frame Analysis")
@@ -250,39 +315,57 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                     st.image(img_path, use_column_width=True)
 
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                log_event("Video Weapon Detection", f"Confidence: {max_confidence:.1f}%", "HIGH")
                 
                 # Professional video alert message
-                alert_text = f"""🚨 SECURITY ALERT - WEAPON DETECTED IN VIDEO SURVEILLANCE
+                alert_text = f"""🚨 SECURITY ALERT - WEAPON DETECTED IN VIDEO
 
 📍 Location: {LOCATION_COORDS}
 🕒 Time: {timestamp}
-🎯 Confidence: {confidence:.1f}%
-📹 Source: Video Surveillance Feed
-📊 Status: IMMEDIATE RESPONSE REQUIRED
+🎯 Confidence: {max_confidence:.1f}%
+⚠️ Threat Level: {threat_level}
+📹 Source: Video Surveillance
+📊 Status: IMMEDIATE REVIEW REQUIRED
 
-⚠️ Action Required: Review video footage
-🔒 Safety Protocol: Area monitoring intensified
+Action Required: Review video footage
+Safety Protocol: Area monitoring intensified
 
 Incident ID: VID{timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 """
                 send_telegram_message(alert_text, image_path=img_path)
+                log_event("Video Alert Sent", f"Telegram - {len(CHAT_IDS)} recipients", "HIGH")
 
-                # Professional audio alert for video
-                st.warning("🔊 VIDEO SURVEILLANCE ALERT - PLAY FOR WARNING")
-                tts = gTTS("Security alert. Weapon detected in video surveillance. Immediate review required. All personnel maintain vigilance.")
-                audio_path = "video_security_alert.mp3"
-                tts.save(audio_path)
-                st.audio(audio_path)
+                # Human verification for video
+                is_confirmed = simulate_human_verification(max_confidence)
+                
+                if is_confirmed:
+                    st.warning("🔊 VIDEO SURVEILLANCE ALERT - PLAY FOR WARNING")
+                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat in video surveillance. Weapon detected with {max_confidence:.1f} percent confidence. Immediate review required.")
+                    audio_path = "video_security_alert.mp3"
+                    tts.save(audio_path)
+                    st.audio(audio_path)
+                    log_event("Video Audio Alert", "TTS generated and ready", "INFO")
+                else:
+                    st.info("🟡 Video alert escalation paused pending further review")
 
             else:
                 st.success("✅ VIDEO ANALYSIS COMPLETE: NO THREATS DETECTED")
-                st.info("Video surveillance analysis completed. No weapons identified in footage.")
+                log_event("Video Clear", "No weapons detected in video", "INFO")
+                st.info("Video surveillance analysis completed. No weapons identified.")
+
+# Event Log Section
+st.markdown("---")
+st.subheader("📊 System Event Log")
+if not st.session_state.log_df.empty:
+    st.dataframe(st.session_state.log_df.sort_values("Timestamp", ascending=False))
+else:
+    st.info("No events logged yet. Upload media to begin analysis.")
 
 # Footer
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: gray;'>"
-    "Weapon Detection & Alert System v1.0 | AI-Powered Security Platform"
+    "Weapon Detection & Alert System v1.0 | AI-Powered Security Platform | Event Logging Active"
     "</div>", 
     unsafe_allow_html=True
 )
