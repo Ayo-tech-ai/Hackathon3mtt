@@ -264,6 +264,7 @@ OpenStreetMap: {openstreetmap_link}
 
 Action Required: Security team dispatched
 Safety Protocol: Area containment initiated
+Public Alert: Evacuation announcement activated
 
 Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 """
@@ -274,13 +275,13 @@ Incident ID: {timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 is_confirmed = simulate_human_verification(max_confidence)
                 
                 if is_confirmed:
-                    # Professional audio alert
-                    st.warning("🔊 SECURITY ALERT AUDIO - PLAY FOR WARNING")
-                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat confirmed. Weapon detected with {max_confidence:.1f} percent confidence. Immediate response required. Location: {state_name} State. Coordinates: {latitude}, {longitude}.")
-                    audio_path = "security_alert.mp3"
+                    # Public safety evacuation announcement
+                    st.warning("🔊 PUBLIC SAFETY ANNOUNCEMENT - EVACUATION ALERT")
+                    tts = gTTS("Emergency! Emergency! Weapon detected around building. Immediate evacuation required. All occupants move calmly to nearest exits. Follow directions of staff and security personnel.", lang='en', slow=False)
+                    audio_path = "evacuation_alert.mp3"
                     tts.save(audio_path)
                     st.audio(audio_path)
-                    log_event("Audio Alert", "TTS generated and ready", "INFO")
+                    log_event("Evacuation Alert", "Public safety announcement activated", "HIGH")
                 else:
                     st.info("🟡 Alert escalation paused pending further review")
 
@@ -378,6 +379,7 @@ OpenStreetMap: {openstreetmap_link}
 
 Action Required: Review video footage
 Safety Protocol: Area monitoring intensified
+Public Alert: Evacuation announcement ready
 
 Incident ID: VID{timestamp.replace(' ', '').replace(':', '').replace('-', '')}
 """
@@ -388,12 +390,12 @@ Incident ID: VID{timestamp.replace(' ', '').replace(':', '').replace('-', '')}
                 is_confirmed = simulate_human_verification(max_confidence)
                 
                 if is_confirmed:
-                    st.warning("🔊 VIDEO SURVEILLANCE ALERT - PLAY FOR WARNING")
-                    tts = gTTS(f"Security alert. {threat_level.lower()} level threat in video surveillance. Weapon detected with {max_confidence:.1f} percent confidence. Immediate review required. Location: {state_name} State. Coordinates: {latitude}, {longitude}.")
-                    audio_path = "video_security_alert.mp3"
+                    st.warning("🔊 PUBLIC SAFETY ANNOUNCEMENT - EVACUATION ALERT")
+                    tts = gTTS("Emergency! Emergency! Weapon detected around building. Immediate evacuation required. All occupants move calmly to nearest exits. Follow directions of staff and security personnel.", lang='en', slow=False)
+                    audio_path = "video_evacuation_alert.mp3"
                     tts.save(audio_path)
                     st.audio(audio_path)
-                    log_event("Video Audio Alert", "TTS generated and ready", "INFO")
+                    log_event("Video Evacuation Alert", "Public safety announcement activated", "HIGH")
                 else:
                     st.info("🟡 Video alert escalation paused pending further review")
 
