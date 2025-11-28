@@ -16,9 +16,9 @@ TELEGRAM_TOKEN = st.secrets["TELEGRAM_TOKEN"]
 
 # Replace these with your real chat IDs later
 CHAT_IDS = [
-    "CHAT_ID_1",
-    "CHAT_ID_2",
-    "CHAT_ID_3"
+    "5455011626",
+    #"CHAT_ID_2",
+    #"CHAT_ID_3"
 ]
 
 # Hardcoded South-South Nigeria coordinates
