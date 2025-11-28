@@ -5,6 +5,7 @@ import os
 from gtts import gTTS
 import requests
 from datetime import datetime
+import cv2
 
 # ========================
 #  CONFIGURATION
