@@ -1,6 +1,5 @@
 import streamlit as st
 from ultralytics import YOLO
-import cv2
 import tempfile
 import os
 from gtts import gTTS
