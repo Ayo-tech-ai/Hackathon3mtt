@@ -250,6 +250,7 @@ Browse [the GitHub repository](https://github.com/Ayo-tech-ai/Hackathon3mtt) to:
 
 **For technical questions about this implementation:**
 - 📧 **Team Lead**: Ayoola Mujib Ayodel
+-  📧 **Team Members**: Edidiong Moses & Samuel Ekong 
 - 🏆 **Hackathon**: 3MTT Build with AI 2025
 - 🛡️ **Track**: Health & Public Safety
 
