@@ -223,18 +223,18 @@ with st.sidebar:
         st.write("**Role:** AI/ML Engineer & Team Lead")
     
     # Team Member 2 (Placeholder)
-    with st.expander("Team Member 2", expanded=False):
-        st.write("**Learning Track:** [Learning Track]")
-        st.write("**Fellow ID:** [Fellow ID]")
-        st.write("**Role:** [Role]")
-        st.write("**Email:** [email@example.com]")
+    with st.expander("Edidiong Ime Moses", expanded=False):
+        st.write("**Learning Track:** Data Science and Machine Learning")
+        st.write("**Fellow ID:** FE/23/96831838")
+        #st.write("**Role:** [Role]")
+        #st.write("**Email:** [email@example.com]")
     
     # Team Member 3 (Placeholder)
-    with st.expander("Team Member 3", expanded=False):
-        st.write("**Learning Track:** [Learning Track]")
-        st.write("**Fellow ID:** [Fellow ID]")
-        st.write("**Role:** [Role]")
-        st.write("**Email:** [email@example.com]")
+    #with st.expander("Team Member 3", expanded=False):
+        #st.write("**Learning Track:** [Learning Track]")
+        #st.write("**Fellow ID:** [Fellow ID]")
+        #st.write("**Role:** [Role]")
+        #st.write("**Email:** [email@example.com]")
     
     st.markdown("---")
     st.caption("Built for 3MTT Build with AI Hackathon 2025")
